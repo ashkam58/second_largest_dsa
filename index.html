@@ -1,0 +1,360 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Second Largest — Super Visualizer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+  :root{
+    --bg:#fff7ee; --ink:#1f2937; --brand:#ff6f61; --accent:#2ec4b6; --soft:#fde68a; --muted:#d0f4de; --code:#0f172a; --code-bg:#0b1020;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, "Comic Sans MS", sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:18px 16px;text-align:center;background:linear-gradient(90deg,#ffd166,#fca5a5,#93c5fd);color:#111}
+  h1{margin:0;font-size:clamp(20px,4vw,34px)}
+  .sub{opacity:.9}
+
+  .app{display:grid;grid-template-columns: 1.2fr 0.9fr;gap:16px;padding:16px;max-width:1200px;margin:0 auto}
+  @media(max-width:900px){.app{grid-template-columns:1fr}}
+
+  /* Panel caPanel/
+  .card{background:#fff;border:2px dashed #ffcaca;border-radius:16px;padding:14px;box-shadow:0 10px 20px rgba(0,0,0,.06)}
+  .card h2{margin:0 0 8px 0;font-size:18px;color:#111}
+
+  /* Controls */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+  .btn{background:var(--brand);border:none;color:#fff;padding:8px 14px;border-radius:999px;font-weight:700;cursor:pointer;box-shadow:0 6px 0 #e4574a;transition:transform .05s}
+  .btn:active{transform:translateY(2px)}
+  .btn.sec{background:#111;box-shadow:0 6px 0 #000}
+  .btn.ghost{background:#f1f5f9;color:#111;box-shadow:none;border:1px solid #e5e7eb}
+  .speed{display:flex;align-items:center;gap:8px}
+  input[type=range]{width:160px}
+  .input-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .input-row input{flex:1;min-width:220px;padding:8px 10px;border-radius:10px;border:1px solid #e5e7eb}
+
+  /* Array track */
+  .track{position:relative;margin:10px 0 4px;}
+  .array{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .box{background:var(--soft);border:2px solid #f59e0b;border-radius:12px;padding:14px 16px;font-size:20px;font-weight:800;min-width:54px;text-align:center;position:relative}
+  .box.as-first{outline:4px solid var(--brand)}
+  .box.as-second{outline:4px solid var(--accent)}
+
+  /* Animated pointer */
+    .pointer{position:absolute;top:-38px;left:0;translate:-50% 0;transition:left var(--t) ease-in-out;--t:.45s;z-index:10;}
+  .pointer .bubble{background:#111;color:#fff;padding:4px 8px;border-radius:999px;font-size:12px;margin-bottom:4px;display:inline-block}
+  .pointer .arrow{font-size:22px;display:block;text-align:center;animation:boop 0.8s ease-in-out infinite}
+  @keyframes boop{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+
+  /* First & Second badges */
+  .fs-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+  .badge{display:flex;align-items:center;gap:8px;background:#ffffff;border:2px solid #e5e7eb;padding:8px 10px;border-radius:14px;font-weight:800}
+  .dot{width:14px;height:14px;border-radius:50%}
+  .dot.first{background:var(--brand)}
+  .dot.second{background:var(--accent)}
+  .pulse{animation:pulse .6s ease}
+  @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+
+  /* Log panes */
+  .logs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:900px){.logs{grid-template-columns:1fr}}
+  .pane{background:var(--muted);border-radius:12px;padding:10px;height:160px;overflow:auto}
+  .pane b{color:#0b3d2e}
+
+  /* Code panel with line highlighting */
+  .codewrap{background:var(--code-bg);color:#cbd5e1;border-radius:16px;padding:12px;position:relative}
+  .codehead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#f8fafc}
+  .code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;font-size:13px;line-height:1.6;counter-reset: ln}
+  .code div{position:relative;padding-left:38px;border-left:4px solid transparent;transition:background .2s,border-color .2s}
+  .code div::before{counter-increment: ln;content: counter(ln);position:absolute;left:10px;color:#64748b}
+  .code div.hl{background:#0f172a;border-color:#60a5fa}
+
+  .legend{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:12px}
+  .legend .swatch{width:14px;height:14px;border-radius:4px;display:inline-block}
+  .swatch.f{background:var(--brand)}
+  .swatch.s{background:var(--accent)}
+
+  .tiny{opacity:.8;font-size:12px}
+</style>
+</head>
+<body>
+  <header>
+    <h1>Second Largest — Cartoon Debugger 🏆🧠</h1>
+    <div class="sub">Move the pointers, highlight the code, own the logic. "Measure twice, cut once" — <em>idiom</em>: think carefully before acting.</div>
+  </header>
+
+  <main class="app">
+    <!-- LEFT: Playground -->
+    <section class="card">
+      <h2>Playground</h2>
+      <div class="controls">
+        <button class="btn" id="play">▶ Play</button>
+        <button class="btn sec" id="pause">⏸ Pause</button>
+        <button class="btn ghost" id="step">⏭ Step</button>
+        <button class="btn ghost" id="reset">🔄 Reset</button>
+        <div class="speed">
+          <span class="tiny">Speed</span>
+          <input id="speed" type="range" min="0.25" max="3" step="0.25" value="1" />
+          <span id="speedLabel" class="tiny">1×</span>
+        </div>
+      </div>
+      <div class="input-row">
+        <input id="arrInput" placeholder="Enter numbers e.g. 12,35,1,10,34,1" value="12,35,1,10,34,1"/>
+        <button class="btn ghost" id="load">Load Array</button>
+        <button class="btn ghost" id="random">🎲 Random</button>
+      </div>
+
+      <div class="track">
+        <div class="pointer" id="ptr" style="left:0">
+          <span class="bubble">i</span>
+          <span class="arrow">⬇️</span>
+        </div>
+        <div class="array" id="array"></div>
+      </div>
+
+      <div class="fs-row">
+        <div class="badge" id="firstBadge"><span class="dot first"></span> first = <span class="val">-∞</span></div>
+        <div class="badge" id="secondBadge"><span class="dot second"></span> second = <span class="val">-∞</span></div>
+      </div>
+
+      <div class="logs">
+        <div class="pane" id="dry">📜 <b>Dry Run</b><br/></div>
+        <div class="pane" id="anim">🎬 <b>Live Notes</b><br/></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Code -->
+    <section class="card codewrap">
+      <div class="codehead"><strong>Highlighted Code</strong><span class="tiny">We light up the exact lines being executed</span></div>
+      <div class="code" id="code">
+        <div data-id="L1">function secondLargest(arr){</div>
+        <div data-id="L2">  let first = -Infinity, second = -Infinity;</div>
+        <div data-id="L3">  for (const x of arr) {</div>
+        <div data-id="L4">    if (x &gt; first) {</div>
+        <div data-id="L5">      second = first;</div>
+        <div data-id="L6">      first = x;</div>
+        <div data-id="L7">    } else if (x &lt; first &amp;&amp; x &gt; second) {</div>
+        <div data-id="L8">      second = x;</div>
+        <div data-id="L9">    }</div>
+        <div data-id="L10">  }</div>
+        <div data-id="L11">  return second === -Infinity ? null : second;</div>
+        <div data-id="L12">}</div>
+      </div>
+      <div class="legend"><span class="swatch f"></span> = first, <span class="swatch s"></span> = second</div>
+    </section>
+  </main>
+
+<script>
+(function(){
+  const arrEl = document.getElementById('array');
+  const ptrEl = document.getElementById('ptr');
+  const dry = document.getElementById('dry');
+  const anim = document.getElementById('anim');
+  const firstBadge = document.querySelector('#firstBadge .val');
+  const secondBadge = document.querySelector('#secondBadge .val');
+  const playBtn = document.getElementById('play');
+  const pauseBtn = document.getElementById('pause');
+  const stepBtn = document.getElementById('step');
+  const resetBtn = document.getElementById('reset');
+  const loadBtn = document.getElementById('load');
+  const rndBtn = document.getElementById('random');
+  const inp = document.getElementById('arrInput');
+  const speed = document.getElementById('speed');
+  const speedLabel = document.getElementById('speedLabel');
+  const code = document.getElementById('code');
+
+  let timer = null;
+  let stepDelay = 800; // base in ms
+  let speedMul = 1;
+
+  function setSpeed(v){
+    speedMul = parseFloat(v)||1; speedLabel.textContent = (Math.round(speedMul*100)/100)+"×";
+    ptrEl.style.setProperty('--t', (0.45/Math.min(speedMul,2.5))+'s');
+  }
+  setSpeed(speed.value);
+  speed.addEventListener('input', e=> setSpeed(e.target.value));
+
+  function parseArray(txt){
+    return txt.split(/[,\s]+/).filter(Boolean).map(Number).filter(n=>Number.isFinite(n));
+  }
+
+  function codeHL(ids){
+    [...code.children].forEach(el=> el.classList.remove('hl'));
+    ids.forEach(id=>{
+      const line = code.querySelector(`[data-id="${id}"]`); if(line) line.classList.add('hl');
+    });
+  }
+
+  let state = null; // {arr, i, first, second, firstIdx, secondIdx, steps, stepPtr}
+
+  function buildBoxes(arr){
+    arrEl.innerHTML = '';
+    arr.forEach(v=>{
+      const d = document.createElement('div');
+      d.className='box'; d.textContent = String(v);
+      arrEl.appendChild(d);
+    });
+  }
+  function boxes(){ return [...arrEl.querySelectorAll('.box')]; }
+
+  function setPointerToIndex(i){
+  const bxs = boxes();
+  let tgt = bxs[i];
+  if(!tgt && bxs.length > 0){ tgt = bxs[0]; }
+  if(!tgt){ ptrEl.style.display = 'none'; return; }
+  ptrEl.style.display = '';
+  const rect = tgt.getBoundingClientRect();
+  const parent = arrEl.getBoundingClientRect();
+  const left = (rect.left - parent.left) + rect.width/2;
+  ptrEl.style.left = left + 'px';
+  }
+
+  function updateBadges(){
+    firstBadge.textContent = state.first===-Infinity? '-∞' : state.first;
+    secondBadge.textContent = state.second===-Infinity? '-∞' : state.second;
+    document.getElementById('firstBadge').classList.add('pulse');
+    setTimeout(()=>document.getElementById('firstBadge').classList.remove('pulse'),250);
+    document.getElementById('secondBadge').classList.add('pulse');
+    setTimeout(()=>document.getElementById('secondBadge').classList.remove('pulse'),250);
+  }
+
+  function paintRoles(){
+    boxes().forEach(b=> b.classList.remove('as-first','as-second'));
+    if(state.firstIdx!=null){ boxes()[state.firstIdx]?.classList.add('as-first'); }
+    if(state.secondIdx!=null){ boxes()[state.secondIdx]?.classList.add('as-second'); }
+  }
+
+  function logDry(s){ dry.innerHTML += s + '<br>'; dry.scrollTop = dry.scrollHeight; }
+  function logAnim(s){ anim.innerHTML += s + '<br>'; anim.scrollTop = anim.scrollHeight; }
+
+  function planSteps(arr){
+    const steps=[];
+    let first=-Infinity, second=-Infinity; let firstIdx=null, secondIdx=null;
+    for(let i=0;i<arr.length;i++){
+      const x = arr[i];
+      steps.push({kind:'movePtr', i, code:['L3'], note:`i = ${i}; x = ${x}`});
+      steps.push({kind:'showCompare', i, x, first, second, code:['L4'], note:`Is ${x} > ${first}?`});
+      if(x>first){
+        // second = first
+        steps.push({kind:'assignSecondFromFirst', i, from:first, to:first, code:['L5'], note:`second = first (${first})`});
+        // first = x
+        steps.push({kind:'assignFirst', i, x, code:['L6'], note:`first = ${x}`});
+        // apply
+        firstIdx=i; secondIdx=(first===-Infinity? null : firstIdx); // previous first lived at firstIdx, but we don't know; keep null
+        first=x; second=(second===-Infinity && steps[steps.length-2].from===-Infinity)? -Infinity : steps[steps.length-2].from;
+      }else if(x<first && x>second){
+        steps.push({kind:'showCompare2', i, x, first, second, code:['L7'], note:`Else if ${x} < ${first} && ${x} > ${second}?`});
+        steps.push({kind:'assignSecondFromX', i, x, code:['L8'], note:`second = ${x}`});
+        // apply
+        second=x; secondIdx=i;
+      }else{
+        steps.push({kind:'showCompare2', i, x, first, second, code:['L7'], note:`Else if ${x} < ${first} && ${x} > ${second}?`});
+        steps.push({kind:'noChange', i, x, code:['L9'], note:`No change.`});
+      }
+    }
+    steps.push({kind:'return', code:['L11'], note:`Return ${second===-Infinity? 'null' : second}`});
+    return steps;
+  }
+
+  function reset(arr){
+    state={
+      arr:[...arr], i:0, first:-Infinity, second:-Infinity, firstIdx:null, secondIdx:null,
+      steps: planSteps(arr), stepPtr:0, playing:false
+    };
+    buildBoxes(arr);
+    setPointerToIndex(0);
+    codeHL(['L1','L2']);
+    firstBadge.textContent='-∞'; secondBadge.textContent='-∞';
+    dry.innerHTML='📜 <b>Dry Run</b><br/>';
+    anim.innerHTML='🎬 <b>Live Notes</b><br/>';
+    paintRoles();
+  }
+
+  function applyRuntime(step){
+    const {kind} = step;
+    switch(kind){
+      case 'movePtr':{
+        setPointerToIndex(step.i);
+        codeHL(step.code);
+        logDry(`<b>i=${step.i}</b> → x=${state.arr[step.i]}`);
+        logAnim(`🔎 Scanning element index ${step.i}`);
+        break;
+      }
+      case 'showCompare':{
+        codeHL(step.code);
+        logDry(`Check: ${step.x} > ${state.first}? → <b>${step.x>state.first}</b>`);
+        logAnim(`🤔 Compare with first (${state.first}).`);
+        break;
+      }
+      case 'assignSecondFromFirst':{
+        codeHL(step.code);
+        state.second = state.first; state.secondIdx = state.firstIdx; // carry prev "first" index
+        logDry(`second = first → second = ${state.second}`);
+        logAnim(`🟢 Promoted old first to <b>second</b>.`);
+        updateBadges(); paintRoles();
+        break;
+      }
+      case 'assignFirst':{
+        codeHL(step.code);
+        state.first = step.x; state.firstIdx = step.i; 
+        logDry(`first = x → first = ${state.first}`);
+        logAnim(`👑 New <b>first</b> is ${state.first} at index ${step.i}.`);
+        updateBadges(); paintRoles();
+        break;
+      }
+      case 'showCompare2':{
+        codeHL(step.code);
+        logDry(`Check: ${step.x} < ${state.first} && ${step.x} > ${state.second}? → <b>${(step.x<state.first && step.x>state.second)}</b>`);
+        logAnim(`🧮 Checking if it fits as <b>second</b>.`);
+        break;
+      }
+      case 'assignSecondFromX':{
+        codeHL(step.code);
+        state.second = step.x; state.secondIdx = step.i; 
+        logDry(`second = x → second = ${state.second}`);
+        logAnim(`🌟 Updated <b>second</b> to ${state.second} at index ${step.i}.`);
+        updateBadges(); paintRoles();
+        break;
+      }
+      case 'noChange':{
+        codeHL(step.code);
+        logDry(`No change; keep first=${state.first}, second=${state.second}`);
+        logAnim(`😌 Skipping.`);
+        break;
+      }
+      case 'return':{
+        codeHL(step.code);
+        const res = state.second===-Infinity? 'null' : state.second;
+        logDry(`<b>Result:</b> ${res}`);
+        logAnim(`🏁 Done! Second largest → <b>${res}</b>.`);
+        break;
+      }
+    }
+  }
+
+  function tick(){
+    if(state.stepPtr >= state.steps.length){ state.playing=false; return; }
+    applyRuntime(state.steps[state.stepPtr]);
+    state.stepPtr++;
+    if(state.playing){ timer = setTimeout(tick, stepDelay/Math.max(speedMul,0.1)); }
+  }
+
+  function play(){ if(state.playing) return; state.playing=true; tick(); }
+  function pause(){ state.playing=false; clearTimeout(timer); }
+  function stepOnce(){ pause(); tick(); }
+
+  function onLoadArray(){ const a = parseArray(inp.value); if(a.length===0) return; pause(); reset(a); }
+  function onRandom(){ const n= Math.floor(5+Math.random()*6); const arr=[...Array(n)].map(()=> Math.floor(Math.random()*60)-10); inp.value=arr.join(','); onLoadArray(); }
+
+  playBtn.addEventListener('click', play);
+  pauseBtn.addEventListener('click', pause);
+  stepBtn.addEventListener('click', stepOnce);
+  resetBtn.addEventListener('click', ()=>{ onLoadArray(); });
+  loadBtn.addEventListener('click', onLoadArray);
+  rndBtn.addEventListener('click', onRandom);
+
+  // first boot
+  reset(parseArray(inp.value));
+})();
+</script>
+</body>
+</html>
